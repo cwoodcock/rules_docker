@@ -17,6 +17,7 @@ import argparse
 import json
 import sys
 
+from datetime import datetime
 from docker import utils
 from containerregistry.transform.v2_2 import metadata as v2_2_metadata
 
@@ -105,6 +106,13 @@ def main():
       ports=args.ports, volumes=args.volumes, workdir=args.workdir),
                                   architecture=_PROCESSOR_ARCHITECTURE,
                                   operating_system=_OPERATING_SYSTEM)
+
+  # v2_2_metadata.Override hard codes the created and history timestamps
+  # https://github.com/google/containerregistry/blob/master/transform/v2_2/metadata_.py#L116
+  # https://github.com/google/containerregistry/blob/master/transform/v2_2/metadata_.py#L180
+  ts = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+  output['created'] = ts
+  output['history'][-1]['created'] = ts
 
   with open(args.output, 'w') as fp:
     json.dump(output, fp, sort_keys=True)
